@@ -1,32 +1,33 @@
 
 load("@com_github_protobuf_c//:bazel/protobuf-c.bzl", "c_proto_library")
+load("@com_github_protobuf_c//:bazel/utils.bzl", "source_files")
+
+
+source_files(
+    name = "protobuf-c-srcs",
+    srcs = glob(["protobuf-c/*.c"]),
+)
+
+source_files(
+    name = "protobuf-c-hdrs",
+    srcs = glob(["protobuf-c/*.h"]),
+)
 
 
 cc_library(
     name = "protobuf-c",
     visibility = ["//visibility:public"],
-    srcs = [
-        "protobuf-c/protobuf-c.c",
-    ],
-    hdrs = [
-        "protobuf-c/protobuf-c.h"],
+    srcs = [":protobuf-c-srcs"],
+    hdrs = [":protobuf-c-hdrs"],
     defines = [
          "PACKAGE_STRING='\"protoc-c\"'",
     ],
-    includes = ["protobuf-c"],
+    includes = ["src", "src/protobuf-c"],
 )
 
-
-original_srcs = glob(["protoc-c/*.cc", "protoc-c/*.h"])
-srcs = [path.replace('protoc-c', 'src/protoc-c') for path in original_srcs]
-
-genrule(
-  name = "protoc-c-lib-srcs",
-  srcs = original_srcs,
-  outs = srcs,
-  cmd = "mkdir src\n" + "\n".join([
-      "cp $(location %s) $(location :%s)" % (src, dst)
-      for src, dst in zip(original_srcs, srcs)]),
+source_files(
+    name = "protoc-c-lib-srcs",
+    srcs = glob(["protoc-c/*.cc", "protoc-c/*.h"]),
 )
 
 cc_library(
