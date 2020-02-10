@@ -16,11 +16,23 @@ cc_library(
     includes = ["protobuf-c"],
 )
 
+
+original_srcs = glob(["protoc-c/*.cc", "protoc-c/*.h"])
+srcs = [path.replace('protoc-c', 'src/protoc-c') for path in original_srcs]
+
+genrule(
+  name = "protoc-c-lib-srcs",
+  srcs = original_srcs,
+  outs = srcs,
+  cmd = "mkdir src\n" + "\n".join([
+      "cp $(location %s) $(location :%s)" % (src, dst)
+      for src, dst in zip(original_srcs, srcs)]),
+)
+
 cc_library(
     name = "protoc-c-lib",
-    hdrs = glob(['protoc-c/*.h']),
-    srcs = glob(['protoc-c/*.cc']),
-    copts = ["-I."],
+    srcs = [":protoc-c-lib-srcs"],
+    includes = ["src/"],
     deps = [
         "@com_google_protobuf//:protoc_lib",
         ":protobuf-c"]
@@ -30,7 +42,6 @@ cc_binary(
     name = "protoc-gen-c",
     visibility = ["//visibility:public"],
     srcs = ["protoc-c/main.cc"],
-    copts = ["-I."],
     deps = [":protoc-c-lib"],
 )
 
@@ -42,6 +53,5 @@ cc_binary(
     name = "protoc-c",
     visibility = ["//visibility:public"],
     srcs = ["protoc-c/main.cc"],
-    copts = ["-I."],
     deps = [":protoc-c-lib"],
 )
