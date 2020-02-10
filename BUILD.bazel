@@ -1,0 +1,47 @@
+
+load("@com_github_protobuf_c//:bazel/protobuf-c.bzl", "c_proto_library")
+
+
+cc_library(
+    name = "protobuf-c",
+    visibility = ["//visibility:public"],
+    srcs = [
+        "protobuf-c/protobuf-c.c",
+    ],
+    hdrs = [
+        "protobuf-c/protobuf-c.h"],
+    defines = [
+         "PACKAGE_STRING='\"protoc-c\"'",
+    ],
+    includes = ["protobuf-c"],
+)
+
+cc_library(
+    name = "protoc-c-lib",
+    hdrs = glob(['protoc-c/*.h']),
+    srcs = glob(['protoc-c/*.cc']),
+    copts = ["-I."],
+    deps = [
+        "@com_google_protobuf//:protoc_lib",
+        ":protobuf-c"]
+)
+
+cc_binary(
+    name = "protoc-gen-c",
+    visibility = ["//visibility:public"],
+    srcs = ["protoc-c/main.cc"],
+    copts = ["-I."],
+    deps = [":protoc-c-lib"],
+)
+
+# The protoc-gen-c binary behaves like a protoc plugin, while the protoc-c
+# binary behaves like protoc itself. It's the same binary that changes its
+# behaviour according to the file name, that's why we generate two binaries
+# that differ only in the name.
+cc_binary(
+    name = "protoc-c",
+    visibility = ["//visibility:public"],
+    srcs = ["protoc-c/main.cc"],
+    copts = ["-I."],
+    deps = [":protoc-c-lib"],
+)
